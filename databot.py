@@ -35,4 +35,4 @@ async def on_message(message):
         await asyncio.sleep(5)
         await client.send_message(message.channel, 'Done sleeping')
 
-client.run('MzI5NTAwNzk4Njg3OTAzNzQ4.DDTXQw.u1Xpgh7wheexFLooG0bBycypSOI')
+client.run('Nothing to see here')
