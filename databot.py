@@ -3,8 +3,12 @@ from discord.ext import commands
 import asyncio
 import datetime
 
+countcommand= "!msgcount" #choose a command to activate count
+token =  "" #token goes here
+
 client = discord.Client()
 bot = commands.Bot(command_prefix='?', description='A simple discord python bot')
+
 
 @client.event
 async def on_ready():
@@ -15,24 +19,33 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    if message.content.startswith('!test'):
-        #stores the number of messages
-        counter = 0
-        start_time = datetime.datetime.now()
+    if message.content.startswith(countcommand):
+        print("{} requested data in {}.".format(message.author.name, message.server.name))
         await client.delete_message(message)
-        #the temporary message which
-        tmp = await client.send_message(message.channel, 'Calculating messages...')
-        for channel in message.server.channels:
-            async for log in client.logs_from(channel, limit=50000):
-                if log.author == message.author:
-                    counter += 1
-        end_time = datetime.datetime.now()
-        uptime = end_time - start_time
-        print('Got data for {}, in {}. Took {}.'.format(message.author.name, message.server.name, uptime))
-        await client.edit_message(tmp, '{}, you have {} messages. Took {} seconds.'.format(message.author.display_name, counter, uptime))
+
+        if len(message.mentions) == 0 and len(message.channel_mentions) == 0:
+            await countmessages(message.author, message.author, message)
+        else:
+            if len(message.mentions) > 0:
+                for n in message.mentions:
+                    await countmessages(n, message.author, message) #call the count message function      
+
     elif message.content.startswith('!sleep'):
         await client.delete_message(message)
         await asyncio.sleep(5)
         await client.send_message(message.channel, 'Done sleeping')
 
-client.run('Nothing to see here')
+async def countmessages(user, mauthor, message): #function to retrieve the message count
+    counter = 0
+    start_time = datetime.datetime.now()
+    tmp = await client.send_message(message.channel, "Counting {}'s messages...".format(user.display_name))#temp message
+    for channel in message.server.channels:
+        async for log in client.logs_from(channel, limit=50000):
+            if log.author == user:
+                counter += 1
+    end_time = datetime.datetime.now()
+    uptime = end_time - start_time
+    print("Retrieved {}'s data for {}, in {}. Took {}.".format(user.name, message.author.name, message.server.name, uptime))
+    await client.edit_message(tmp, '{} has posted {} messages. Took {} seconds.'.format(user.display_name, counter, uptime))
+
+client.run(token)
