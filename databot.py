@@ -24,22 +24,27 @@ async def on_message(message):
         await client.delete_message(message)
 
         if len(message.mentions) == 0 and len(message.channel_mentions) == 0:
-            await countmessages(message.author, message.author, message)
+            await countmessages(message.author, message.author, message.server.channels, message)
         else:
-            if len(message.mentions) > 0:
+            if len(message.channel_mentions) == 0:
                 for n in message.mentions:
-                    await countmessages(n, message.author, message) #call the count message function      
+                    await countmessages(n, message.author, message.server.channels, message)
+            elif len(message.mentions) == 0:
+                await countmessages(message.author, message.author, message.channel_mentions, message)
+            else:
+                for n in message.mentions:
+                    await countmessages(n, message.author, message.channel_mentions, message) #call the count message function
 
     elif message.content.startswith('!sleep'):
         await client.delete_message(message)
         await asyncio.sleep(5)
         await client.send_message(message.channel, 'Done sleeping')
 
-async def countmessages(user, mauthor, message): #function to retrieve the message count
+async def countmessages(user, mauthor, SearchChannel, message): #function to retrieve the message count
     counter = 0
     start_time = datetime.datetime.now()
     tmp = await client.send_message(message.channel, "Counting {}'s messages...".format(user.display_name))#temp message
-    for channel in message.server.channels:
+    for channel in SearchChannel:
         async for log in client.logs_from(channel, limit=50000):
             if log.author == user:
                 counter += 1
